@@ -1,11 +1,13 @@
 <template>
-  <div class="app">
+  <v-app>
     <navbar></navbar>
-  </div>
+    <div class="content">
+    </div>
+  </v-app>
 </template>
 
 <script>
-import Navbar from "./components/admin/ui/Navbar"
+import Navbar from './components/user/ui/navigation/NavBar'
 export default {
   components: {
     "navbar": Navbar
@@ -13,6 +15,9 @@ export default {
 };
 </script>
 
-<style>
-  
+<style scoped>
+  .content{
+    height: 1000px;
+  }
+
 </style>
