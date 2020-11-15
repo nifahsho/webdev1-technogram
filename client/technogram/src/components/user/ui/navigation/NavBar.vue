@@ -33,14 +33,15 @@
         text small
         :class='menuClass(index)' 
         v-for="(menu,index) in menus" 
-        :key='menu.id'
+        :key='menu.routerName'
         @click="onMenuSelected(index)"
+        :ripple="false"
         >{{menu.name}}</v-btn>
       </div>
     </nav>
     <transition :name="transitionName">
       <div class="drawer" v-if="shouldShowDrawer">
-        <nav-drawer :menus="menus" :onClicked="onMenuSelected" :currentSelected="selectedMenu"></nav-drawer>
+        <nav-drawer :menus="menus" :onClicked="onDrawerMenuSelected" :currentSelected="selectedMenuIndex"></nav-drawer>
       </div>
     </transition>
   </div>
@@ -49,8 +50,22 @@
 <script>
 import NavDrawer from "./NavDrawer.vue";
 const TEN_MINUTES = 1000 * 60 * 10;
+
+const getFullRoute = (name , query) => {
+  if(query){  
+    return `/${name}?category=${query}`
+  }
+  return `/${name}`
+}
+
 export default {
   created(){
+    this.menus.forEach((item,index) => {
+      if(this.$router.currentRoute.fullPath === getFullRoute(this.menus[index].route , this.menus[index].query || null)){
+        this.selectedMenuIndex = index;
+        this.selectedMenu = this.$router.currentRoute.fullPath;
+      }
+    })
     this.currentTime = new Date().getHours();
     setInterval(()=>{
       this.currentTime = new Date().getHours();
@@ -68,13 +83,14 @@ export default {
       isDrawerShown: false,
       isDrawerAnimationNeeded: false,
       menus: [
-        { id :1 , name : 'Home'},
-        { id: 2, name: "Software" },
-        { id: 3, name: "Brainware" },
-        { id: 4, name: "Hardware" },
-        { id :5 , name : 'More'}
+        {  name : 'Home' , routeName : 'home' , route:'', query : null  },
+        { name: "Software" , routeName : 'search-result' , route:  'search' ,  query : 'software'},
+        { name: "Brainware" , routeName : 'search-result', route:  'search' , query : 'brainware' },
+        { name: "Hardware" , routeName : 'search-result' , route : 'search', query : 'hardware'},
+        {  name : 'More' , routeName : 'more-categories' , route : 'categories'}
       ],
-      selectedMenu : 1,
+      selectedMenu : this.$router.currentRoute.name,
+      selectedMenuIndex : 0,
       currentTime : null
     };
   },
@@ -116,15 +132,25 @@ export default {
       this.isDrawerShown = !this.isDrawerShown;
       //burger animation
       this.$refs.burger.classList.toggle("toogle");
-      // if(this.isDrawerShown){
-
-      // }
     },
     menuClass(index){
-      return index === this.selectedMenu ? 'button text-decoration-underline'  : 'button'
+      return this.selectedMenu === getFullRoute(this.menus[index].route , this.menus[index].query || null) ? 'button text-decoration-underline font-weight-bold'  : 'button font-weight-bold'
+    },
+    onDrawerMenuSelected(index){
+      this.isDrawerShown = !this.isDrawerShown;
+      //burger animation
+      this.$refs.burger.classList.toggle("toogle");
+      this.onMenuSelected(index);
     },
     onMenuSelected(index){
-      this.selectedMenu = index;
+      this.$router.push({
+        name: this.menus[index].routeName,
+        query  : this.menus[index].query? {
+          category : this.menus[index].query
+        } : null
+      }).catch(err => {err;});
+      this.selectedMenuIndex = index;
+      this.selectedMenu = this.$router.currentRoute.fullPath;
     }
   },
   watch: {
@@ -152,7 +178,6 @@ export default {
 
 nav {
   border-bottom: 0.5px solid rgba(0, 0, 0, 0.356);
-  position: fixed;
   width: 100%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.356);
   z-index: 99;
@@ -175,7 +200,7 @@ nav {
 /* Logo */
 .header .middle {
   display: flex;
-  flex: 2 1 5rem;
+  flex: 3 1 5rem;
   justify-content: center;
 }
 
@@ -200,7 +225,7 @@ nav {
 .header .right .navigation {
   display: flex;
   flex: 1 1 5rem;
-  justify-content: right;
+  justify-content: flex-end;
   align-items: center;
 }
 
@@ -234,7 +259,15 @@ nav {
 }
 
 .item .button {
-  margin: 1rem;
+  margin: 0.25rem 1rem 0.25rem 1rem;
+}
+
+.v-btn:before {
+  opacity: 0 !important;
+}
+
+.v-ripple__container {
+  opacity: 0 !important;
 }
 
 .drawer {
@@ -282,21 +315,21 @@ nav {
     background: white;
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.247);
     width: 100%;
-    position: fixed;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.356);
   }
   .navBar {
     overflow-x: hidden;
   }
   .drawer {
+    background: white;
     position: absolute;
     top: 8.5vh;
-    z-index: 90;
+    z-index: 100;
   }
 
   .slide-leave-active {
-  animation: slide-out 1s ease-out forwards;
-  transition: opacity 2s;
+  animation: slide-out 0.5s ease-out forwards;
+  transition: opacity 1s;
   opacity: 0;
   position: absolute;
   }
@@ -316,8 +349,8 @@ nav {
 }
 
 .slide-enter-active {
-  animation: slide-in 1s ease-out forwards;
-  transition: opacity 2s;
+  animation: slide-in 0.5s ease-out forwards;
+  transition: opacity 1s;
 }
 
 

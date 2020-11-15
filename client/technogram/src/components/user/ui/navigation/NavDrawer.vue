@@ -6,7 +6,7 @@
           <v-text-field
           class="text-caption"
           placeholder="Masukan kata kunci pencarian disini ...."
-          prepend-inner-icon="mdi-map-marker"
+          prepend-inner-icon="mdi-magnify"
           ></v-text-field>
         </v-form>
       </v-col>
